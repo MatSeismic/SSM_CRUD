@@ -45,12 +45,14 @@
                         <label for="empName_add_input" class="col-sm-2 control-label">empName</label>
                         <div class="col-sm-10">
                             <input type="text" name="empName" class="form-control" id="empName_add_input" placeholder="empName">
+                            <span class="help-block"></span>
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="email_add_input" class="col-sm-2 control-label">email</label>
                         <div class="col-sm-10">
                             <input type="email" name="email" class="form-control" id="email_add_input" placeholder="chandlerBing@gmail.com">
+                            <span class="help-block"></span>
                         </div>
                     </div>
                     <div class="form-group">
@@ -76,7 +78,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary">Save changes</button>
+                <button type="button" class="btn btn-primary" id="emp_save_btn">Save changes</button>
             </div>
         </div>
     </div>
@@ -129,6 +131,9 @@
 </div>
 
 <script type="text/javascript">
+
+    var totalRecord;
+
     $(function(){
         //去首页
         to_page(1);
@@ -178,7 +183,8 @@
     function build_page_info(result) {
         $("#page_info_area").empty();
         $("#page_info_area").append("Current Page: "+ result.extend.pageInfo.pageNum +", total pages: "
-            + result.extend.pageInfo.pages +", total records:"+ result.extend.pageInfo.total)
+            + result.extend.pageInfo.pages +", total records:"+ result.extend.pageInfo.total);
+        totalRecord = result.extend.pageInfo.pages;
     }
 
     //解析显示分页条，点击分页要能去下一页....
@@ -260,6 +266,7 @@
             success: function (result) {
                 console.log(result);
                 // department information
+                $("#dept_add_select").empty();
                 $.each(result.extend.depts, function () {
                     var optionEle = $("<option></option>").append(this.deptName).attr("value", this.deptId);
                     optionEle.appendTo("#dept_add_select");
@@ -267,6 +274,51 @@
             }
         })
     }
+
+    function validate_add_form(){
+        var empName = $("#empName_add_input").val();
+        var regName = /(^[a-zA-Z0-9_-]{6,16}$)|(^[\u2E80-\u9FFF]{2,5})/;
+        if(!regName.test(empName)){
+            $("#empName_add_input").parent().addClass("has-error");
+            $("#empName_add_input").next("span").text("Username should be combination of letters and/or numbers with length of 6-16!");
+            // alert("Username should be combination of letters and/or numbers with length of 6-16!");
+            return false;
+        }else{
+            $("#empName_add_input").parent().addClass("has-success");
+            $("#empName_add_input").next("span").text("");
+        };
+
+        var email =$("#email_add_input").val();
+        var regEmail = /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$;
+        if(!regEmail.test(email)){
+            $("#email_add_input").parent().addClass("has-error");
+            $("#empName_add_input").next("span").text("Invalid email address!");
+            return false;
+        }else{
+            $("#email_add_input").parent().addClass("has-success");
+            $("#email_add_input").next("span").text("");
+        };
+
+        return true;
+    }
+
+    $("#emp_save_btn").click(function () {
+
+        if(!validate_add_form()){
+            return false;
+        }
+
+        $.ajax({
+            url:"${APP_PATH}/emp",
+            type:"POST",
+            data: $("#empAddModal form").serialize(),
+            success: function (result) {
+                $("#empAddModal").modal("hide");
+
+                to_page(totalRecord);
+            }
+        });
+    });
 
 </script>
 

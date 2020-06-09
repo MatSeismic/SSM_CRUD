@@ -45,12 +45,14 @@
                         <label for="empName_add_input" class="col-sm-2 control-label">empName</label>
                         <div class="col-sm-10">
                             <input type="text" name="empName" class="form-control" id="empName_add_input" placeholder="empName">
+                            <span class="help-block"></span>
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="email_add_input" class="col-sm-2 control-label">email</label>
                         <div class="col-sm-10">
                             <input type="email" name="email" class="form-control" id="email_add_input" placeholder="chandlerBing@gmail.com">
+                            <span class="help-block"></span>
                         </div>
                     </div>
                     <div class="form-group">
@@ -129,6 +131,9 @@
 </div>
 
 <script type="text/javascript">
+
+    var totalRecord;
+
     $(function(){
         //去首页
         to_page(1);
@@ -178,7 +183,8 @@
     function build_page_info(result) {
         $("#page_info_area").empty();
         $("#page_info_area").append("Current Page: "+ result.extend.pageInfo.pageNum +", total pages: "
-            + result.extend.pageInfo.pages +", total records:"+ result.extend.pageInfo.total)
+            + result.extend.pageInfo.pages +", total records:"+ result.extend.pageInfo.total);
+        totalRecord = result.extend.pageInfo.pages;
     }
 
     //解析显示分页条，点击分页要能去下一页....
@@ -269,8 +275,74 @@
         })
     }
 
+    function validate_add_form(){
+        var empName = $("#empName_add_input").val();
+        var regName = /(^[a-zA-Z0-9_-]{6,16}$)|(^[\u2E80-\u9FFF]{2,5})/;
+        if(!regName.test(empName)){
+            show_validate_msg("#empName_add_input", "error", "Username should be combination of letters and/or numbers with length of 6-16!");
+            return false;
+        }else{
+            show_validate_msg("#empName_add_input", "success", "");
+        };
+
+        var email =$("#email_add_input").val();
+        var regEmail = /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$;
+        if(!regEmail.test(email)){
+            show_validate_msg("#email_add_input", "error", "Invalid email address!");
+
+            return false;
+        }else{
+            show_validate_msg("#email_add_input", "success", "");
+        };
+
+        return true;
+    }
+
+    function show_validate_msg(ele, status, msg){
+        $(ele).parent().removeClass("has-success has-error");
+        $(ele).next("span").text("");
+        if(status=="success"){
+            $(ele).parent().addClass("has-success");
+            $(ele).next("span").text("");
+        }else if(status=="error"){
+            $(ele).parent().addClass("has-error");
+            $(ele).next("span").text(msg);
+        }
+    }
+
+    $("#empName_add_input").change(function () {
+        var empName = this.value;
+        $.ajax({
+            url: "${APP_PATH}/checkuser",
+            data: "empName="+=empName,
+            type: "POST",
+            success: function (result) {
+                if(result.code==100){
+                    show_validate_msg("#empName_add_input", "success", "Nice username");
+                }else{
+                    show_validate_msg("#empName_add_input", "error", "Invalid username");
+                }
+
+            }
+        })
+    });
+
     $("#emp_save_btn").click(function () {
 
+        if(!validate_add_form()){
+            return false;
+        }
+
+        $.ajax({
+            url:"${APP_PATH}/emp",
+            type:"POST",
+            data: $("#empAddModal form").serialize(),
+            success: function (result) {
+                $("#empAddModal").modal("hide");
+
+                to_page(totalRecord);
+            }
+        });
     });
 
 </script>

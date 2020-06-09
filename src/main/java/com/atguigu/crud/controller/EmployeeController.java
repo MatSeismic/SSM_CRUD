@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -20,10 +21,23 @@ public class EmployeeController {
     @Autowired
     EmployeeService employeeService;
 
+    @ResponseBody
+    @RequestMapping("/checkuser")
+    public Msg checkUser(@RequestParam("empName") String empName){
+        boolean b = employeeService.checkUser(empName);
+        if(b){
+            return Msg.success();
+        }else{
+            return Msg.fail();
+        }
+    }
 
-    @RequestMapping()
-    public Msg saveEmp(){
-        return null;
+
+    @RequestMapping(value = "/emp", method = RequestMethod.POST)
+    @ResponseBody
+    public Msg saveEmp(Employee emp){
+        employeeService.saveEmp(emp);
+        return Msg.success();
     }
 
     @RequestMapping("/emps")
