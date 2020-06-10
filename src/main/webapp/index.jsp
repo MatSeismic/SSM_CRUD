@@ -183,7 +183,7 @@
 
 <script type="text/javascript">
 
-    var totalRecord;
+    var totalRecord, currentPage;
 
     $(function(){
         //去首页
@@ -237,6 +237,7 @@
         $("#page_info_area").append("Current Page: "+ result.extend.pageInfo.pageNum +", total pages: "
             + result.extend.pageInfo.pages +", total records:"+ result.extend.pageInfo.total);
         totalRecord = result.extend.pageInfo.pages;
+        currentPage = result.extend.pageInfo.pageNum;
     }
 
     //解析显示分页条，点击分页要能去下一页....
@@ -448,6 +449,32 @@
             }
         });
     }
+
+    //update user info
+    $("#emp_update_btn").click(function () {
+        // validate email
+        var email =$("#email_update_input").val();
+        var regEmail = /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$/;
+        if(!regEmail.test(email)){
+            show_validate_msg("#email_update_input", "error", "Invalid email address!");
+
+            return false;
+        }else{
+            show_validate_msg("#email_update_input", "success", "");
+        };
+
+        //ajax to update info
+
+        $.ajax({
+            url: "${APP_PATH}/emp/"+$(this).attr("edit-id"),
+            type: "PUT",
+            data: $("#empUpdateModal form").serialize(),
+            success:function (result) {
+                $("#empUpdateModal").modal("hide");
+                to_page(currentPage);
+            }
+        })
+    })
 
 </script>
 

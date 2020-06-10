@@ -23,6 +23,13 @@ public class EmployeeController {
     @Autowired
     EmployeeService employeeService;
 
+    @ResponseBody
+    @RequestMapping(value = "/emp/{empId}", method = RequestMethod.PUT)
+    public Msg saveEmp(Employee employee){
+        employeeService.updateEmp(employee);
+        return Msg.success();
+    }
+
     @RequestMapping(value = "/emp/{id}", method = RequestMethod.GET)
     @ResponseBody
     public Msg getEmp(@PathVariable("id") Integer id){
