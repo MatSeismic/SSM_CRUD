@@ -145,7 +145,7 @@
     <div class="row">
         <div class="col-md-4 col-md-offset-8">
             <button class="btn btn-primary" id="emp_add_modal_button">insert</button>
-            <button class="btn btn-danger">delete</button>
+            <button class="btn btn-danger" id="emp_delete_all_btn">delete</button>
         </div>
     </div>
     <div class="row">
@@ -153,6 +153,9 @@
             <table class="table table-hover" id="emps_table">
                 <thead>
                     <tr>
+                        <th>
+                            <input type="checkbox" id="check_all">
+                        </th>
                         <th>#</th>
                         <th>empName</th>
                         <th>gender</th>
@@ -211,6 +214,7 @@
         $("#emps_table tbody").empty();
         var emps = result.extend.pageInfo.list;
         $.each(emps, function(index, item){
+            var checkBoxTd = $("<td><input type='checkbox' class='check-item'/></td>");
             var empIdTd = $("<td></td>").append(item.empId);
             var empNameTd = $("<td></td>").append(item.empName);
             var genderTd = $("<td></td>").append(item.gender=='M'?"男":"女");
@@ -221,8 +225,10 @@
             editBtn.attr("edit-id", item.empId);
             var deleteBtn = $("<button></button>").addClass("btn btn-sm btn-danger delete_btn")
                 .append($("<span></span>").addClass("glyphicon glyphicon-trash")).append("删除");
+            deleteBtn.attr("delete-id", item.empId);
             var btnTd = $("<td></td>").append(editBtn).append(" ").append(deleteBtn);
-            $("<tr></tr>").append(empIdTd)
+            $("<tr></tr>").append(checkBoxTd)
+                .append(empIdTd)
                 .append(empNameTd)
                 .append(genderTd)
                 .append(emailTd)
@@ -427,6 +433,7 @@
     });
 
 
+
     $(document).on("click", ".edit_btn", function () {
         getDepts("#empUpdateModal select");
         getEmp($(this).attr("edit-id"));
@@ -475,6 +482,54 @@
             }
         })
     })
+
+    $(document).on("click", ".delete_btn", function () {
+        var empName = $(this).parents("tr").find("td:eq(2)").text();
+        var empId = $(this).attr("delete-id");
+
+        if(confirm("Sure to delete "+empName+" ?")){
+            $.ajax({
+                url:"${APP_PATH}/emp/"+ empId,
+                type:"DELETE",
+                success:function (result) {
+                    alert(result.msg);
+                    to_page(currentPage);
+                }
+            })
+        }
+    })
+
+    $("#check_all").click(function () {
+        $(".check_item").prop("checked", $(this).prop("checked"));
+    })
+
+    //check_item
+    $(document).on("click", ".check_item", function () {
+        var flag = $(".check_item:checked").length==$(".check_item");
+        $("#check_all").prop("checked", flag);
+    });
+
+    $("#emp_delete_all_btn"){
+        var empNames = "";
+        var del_id_str="";
+        $.each($(".check_item:checked"),function () {
+            empNames += $(this).parents("tr").find("td:eq(2)").text()+", ";
+            del_id_str +=$(this).parents("tr").find("td:eq(1)").text()+"-"
+        });
+
+        empNames = empNames.substring(0, empNames.length-1);
+        del_id_str = del_id_str.substring(0, del_id_str.length-1);
+        if(confirm("Sure to delete "+empNames+" ?")){
+            $.ajax({
+                url: "${APP_PATH}/emp/"+del_id_str,
+                type: "DELETE",
+                success: function (result) {
+                    alert(result.msg);
+                    to_page(currentPage);
+                }
+            })
+        }
+    }
 
 </script>
 
