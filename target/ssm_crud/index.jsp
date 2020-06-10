@@ -84,6 +84,57 @@
     </div>
 </div>
 
+<%--update employee info--%>
+<div class="modal fade" id="empUpdateModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" >Update Employee Info</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal">
+                    <div class="form-group">
+                        <label for="empName_add_input" class="col-sm-2 control-label">empName</label>
+                        <div class="col-sm-10">
+                            <p name="empName" class="form-control" id="empName_update_static" placeholder="empName"></p>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="email_add_input" class="col-sm-2 control-label">email</label>
+                        <div class="col-sm-10">
+                            <input type="email" name="email" class="form-control" id="email_update_input" placeholder="chandlerBing@gmail.com">
+                            <span class="help-block"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">gender</label>
+                        <div class="col-sm-10">
+                            <label class="radio_inline">
+                                <input type="radio" name="gender" id="gender1_update_input" value="M" checked="checked">Male
+                            </label>
+                            <label class="radio_inline">
+                                <input type="radio" name="gender" id="gender2_update_input" value="F">Female
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">deptName</label>
+                        <div class="col-sm-10">
+                            <select class="form_control" name="dId" id="dept_update_select">
+
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="emp_update_btn">Update changes</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="container">
     <div class="row">
@@ -165,9 +216,10 @@
             var genderTd = $("<td></td>").append(item.gender=='M'?"男":"女");
             var emailTd = $("<td></td>").append(item.email);
             var deptNameTd = $("<td></td>").append(item.department.deptName);
-            var editBtn = $("<button></button>").addClass("btn btn-sm btn-primary")
+            var editBtn = $("<button></button>").addClass("btn btn-sm btn-primary edit_btn")
                 .append($("<span></span>").addClass("glyphicon glyphicon-pencil")).append("编辑");
-            var deleteBtn = $("<button></button>").addClass("btn btn-sm btn-danger")
+            editBtn.attr("edit-id", item.empId);
+            var deleteBtn = $("<button></button>").addClass("btn btn-sm btn-danger delete_btn")
                 .append($("<span></span>").addClass("glyphicon glyphicon-trash")).append("删除");
             var btnTd = $("<td></td>").append(editBtn).append(" ").append(deleteBtn);
             $("<tr></tr>").append(empIdTd)
@@ -249,17 +301,26 @@
         navEle.appendTo("#page_nav_area");
     }
 
+    function reset_form(ele){
+        $(ele)[0].reset();
+        $(ele).find("*").removeClass("has-error has-success");
+        $(ele).find(".help-block").text("");
+
+    }
+
     $("#emp_add_modal_button").click(function () {
 
+        reset_form($("#empAddModal form"));
 
-        getDepts();
+        getDepts("#dept_add_select");
         $("#empAddModal").modal({
             backdrop:"static"
         });
     });
 
     // search info about all depts
-    function getDepts() {
+    function getDepts(ele) {
+        $(ele).empty();
         $.ajax({
             url: "${APP_PATH}/depts",
             type: "GET",
@@ -269,7 +330,8 @@
                 $("#dept_add_select").empty();
                 $.each(result.extend.depts, function () {
                     var optionEle = $("<option></option>").append(this.deptName).attr("value", this.deptId);
-                    optionEle.appendTo("#dept_add_select");
+                    // optionEle.appendTo("#dept_add_select");
+                    optionEle.appendTo(ele);
                 });
             }
         })
@@ -279,32 +341,63 @@
         var empName = $("#empName_add_input").val();
         var regName = /(^[a-zA-Z0-9_-]{6,16}$)|(^[\u2E80-\u9FFF]{2,5})/;
         if(!regName.test(empName)){
-            $("#empName_add_input").parent().addClass("has-error");
-            $("#empName_add_input").next("span").text("Username should be combination of letters and/or numbers with length of 6-16!");
-            // alert("Username should be combination of letters and/or numbers with length of 6-16!");
+            show_validate_msg("#empName_add_input", "error", "Username should be combination of letters and/or numbers with length of 6-16!");
             return false;
         }else{
-            $("#empName_add_input").parent().addClass("has-success");
-            $("#empName_add_input").next("span").text("");
+            show_validate_msg("#empName_add_input", "success", "");
         };
 
         var email =$("#email_add_input").val();
-        var regEmail = /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$;
+        var regEmail = /^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$/;
         if(!regEmail.test(email)){
-            $("#email_add_input").parent().addClass("has-error");
-            $("#empName_add_input").next("span").text("Invalid email address!");
+            show_validate_msg("#email_add_input", "error", "Invalid email address!");
+
             return false;
         }else{
-            $("#email_add_input").parent().addClass("has-success");
-            $("#email_add_input").next("span").text("");
+            show_validate_msg("#email_add_input", "success", "");
         };
 
         return true;
     }
 
+    function show_validate_msg(ele, status, msg){
+        $(ele).parent().removeClass("has-success has-error");
+        $(ele).next("span").text("");
+        if(status=="success"){
+            $(ele).parent().addClass("has-success");
+            $(ele).next("span").text("");
+        }else if(status=="error"){
+            $(ele).parent().addClass("has-error");
+            $(ele).next("span").text(msg);
+        }
+    }
+
+    $("#empName_add_input").change(function () {
+        var empName = this.value;
+        $.ajax({
+            url: "${APP_PATH}/checkuser",
+            data: "empName="+empName,
+            type: "POST",
+            success: function (result) {
+                if(result.code==100){
+                    show_validate_msg("#empName_add_input", "success", "Nice username");
+                    $("#emp_save_btn").attr("ajax-va", "success");
+                }else{
+                    show_validate_msg("#empName_add_input", "error", result.extend.va_msg);
+                    $("#emp_save_btn").attr("ajax-va", "error");
+                }
+
+            }
+        })
+    });
+
     $("#emp_save_btn").click(function () {
 
         if(!validate_add_form()){
+            return false;
+        }
+
+        if($(this).attr("ajax-va") == "error"){
             return false;
         }
 
@@ -313,12 +406,48 @@
             type:"POST",
             data: $("#empAddModal form").serialize(),
             success: function (result) {
-                $("#empAddModal").modal("hide");
+                if(result.code== 100){
+                    $("#empAddModal").modal("hide");
 
-                to_page(totalRecord);
+                    to_page(totalRecord);
+                }else{
+                    if(result.extend.errorFields.email != undefined){
+                        show_validate_msg("#email_add_input", "error", "Invalid email address!");
+                    }
+
+                    if(result.extend.errorFields.empName != undefined){
+                        show_validate_msg("#empName_add_input", "error", result.extend.va_msg);
+                    }
+                }
+
+
             }
         });
     });
+
+
+    $(document).on("click", ".edit_btn", function () {
+        getDepts("#empUpdateModal select");
+        getEmp($(this).attr("edit-id"));
+        $("#emp_update_btn").attr("edit-id", $(this).attr("edit-id"));
+        $("#empUpdateModal").modal({
+            backdrop: "static"
+        });
+    });
+    
+    function getEmp(id) {
+        $.ajax({
+            url:"${APP_PATH}/emp/"+id,
+            type: "GET",
+            success: function (result) {
+                var empData = result.extend.emp;
+                $("#empName_update_static").text(empData.empName);
+                $("#email_update_input").val(empData.email);
+                $("#empUpdateModal input[name=gender]").val([empData.gender]);
+                $("#empUpdateModal select").val([empData.dId]);
+            }
+        });
+    }
 
 </script>
 

@@ -1,12 +1,19 @@
 package com.atguigu.crud.bean;
 
+import javax.validation.constraints.Email;
+import javax.validation.constraints.Pattern;
+
 public class Employee {
     private Integer empId;
 
+    @Pattern(regexp = "(^[a-zA-Z0-9_-]{6,16}$)|(^[\\u2E80-\\u9FFF]{2,5})",
+            message = "Username must be combination of letters and/or numbers with length of 6-16!")
     private String empName;
 
     private String gender;
 
+    @Email(message ="Invalid email address" )
+    //@Pattern(regexp = "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$", message = "Invalid email address")
     private String email;
 
     private Integer dId;
